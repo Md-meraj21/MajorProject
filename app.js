@@ -2,7 +2,6 @@ if(process.env.NODE_ENV != "production") {
   require('dotenv').config() 
 }
 
-
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -30,23 +29,26 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
 
+//  Database 
+// const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+const dburl = process.env.ATLAS_DBS;
 
 
 const store = MongoStore.create({
-  mongoUrl: db_url,
+  mongoUrl: dburl,
   crypto: {
     secret: process.env.SECRET,
   },
   touchAfter: 24 * 3600
 })
-store.on("error",() => {
+store.on("error",(err) => {
   console.log("ERROR IN MONGO SESSION STORE",err);
 })
 
 //  Se
 // ssion + Flash 
 const sessionOptions = {
-  // store,
+  store,
   secret: process.env.SECRET,
   resave: false,
   saveUninitialized: true,
@@ -78,12 +80,10 @@ app.use((req, res, next) => {
   next();
 });
 
-//  Database 
-// const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
-const db_url = process.env.ATLAS_DBS;
+
 
 async function main() {
-  await mongoose.connect(db_url);
+  await mongoose.connect(dburl);
 }
 main()
   .then(() => console.log("Connected to DB"))
